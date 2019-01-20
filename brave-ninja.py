@@ -7,12 +7,40 @@ import mountains
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 
-COIN_SCALE = 0.5
-COIN_COUNT = 50
+SHURIKEN_SCALE = 0.5
+SHURIKEN_COUNT = 30
 
 MOVEMENT_SPEED = 5
 
+class FallingShuriken(arcade.Sprite):
+    """ Simple sprite that falls down """
+
+    def update(self):
+        """ Move the shuriken """
+
+        # Fall down
+        self.center_y -= 3
+
+        # Did we go off the screen? If so, pop back to the top and set new center_x position.
+        if self.top < 0:
+            self.bottom = SCREEN_HEIGHT
+            self.center_x = random.randrange(SCREEN_WIDTH)
+
 class MyGame(arcade.Window):
+    
+    def level(self):
+        for i in range(SHURIKEN_COUNT):
+
+            # Create the shuriken instance
+            shuriken = FallingShuriken("images/shuriken.png", SHURIKEN_SCALE / 2)
+
+            # Position the shuriken
+            shuriken.center_x = random.randrange(SCREEN_WIDTH)
+            shuriken.center_y = random.randrange(SCREEN_HEIGHT, SCREEN_HEIGHT * 2)
+
+            # Add the shuriken to the lists
+            self.all_sprites_list.append(shuriken)
+            self.shuriken_list.append(shuriken)
 
     mountains = mountains.Mountains(SCREEN_WIDTH)
 
@@ -30,7 +58,8 @@ class MyGame(arcade.Window):
 
         # Sprite lists
         self.all_sprites_list = None
-        self.coin_list = None
+        self.shuriken_list = None
+        self.game_state = None
 
         # Set up the player
         self.score = 0
@@ -38,7 +67,8 @@ class MyGame(arcade.Window):
 
     def setup(self):
         self.all_sprites_list = arcade.SpriteList()
-        self.coin_list = arcade.SpriteList()
+        self.shuriken_list = arcade.SpriteList()
+        self.game_state = True
 
         # Set up the player
         self.score = 0
@@ -71,10 +101,11 @@ class MyGame(arcade.Window):
         self.player.texture_change_distance = 20
 
         self.player.center_x = SCREEN_WIDTH // 2
-        self.player.center_y = SCREEN_HEIGHT // 2
+        self.player.center_y = SCREEN_HEIGHT // 5
         self.player.scale = 1.2
 
         self.all_sprites_list.append(self.player)
+        self.level()
 
         self.back = []
         self.back = self.mountains.getMountains(self.back)
@@ -105,19 +136,20 @@ class MyGame(arcade.Window):
         for mountain_range in self.back:
             mountain_range.draw()
 
-        # Draw all the sprites.
-        self.all_sprites_list.draw()
+        if self.game_state:
+            # Draw all the sprites.
+            self.all_sprites_list.draw()
+            self.shuriken_list.draw()
 
-        # Put the text on the screen.
-        output = "Score: {}".format(self.score)
-        arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
+            # Put the text on the screen.
+            output = "Score: {}".format(int(self.score))
+            arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
+        else:
+            output = "Game over"
+            arcade.draw_text(output, 535, 350, arcade.color.WHITE, 30)
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.UP:
-            self.player.change_y = MOVEMENT_SPEED
-        elif key == arcade.key.DOWN:
-            self.player.change_y = -MOVEMENT_SPEED
-        elif key == arcade.key.LEFT:
+        if key == arcade.key.LEFT:
             self.player.change_x = -MOVEMENT_SPEED
         elif key == arcade.key.RIGHT:
             self.player.change_x = MOVEMENT_SPEED
@@ -136,12 +168,15 @@ class MyGame(arcade.Window):
         # Generate a list of all sprites that collided with the player.
         hit_list = \
             arcade.check_for_collision_with_list(self.player,
-                                                 self.coin_list)
+                                                 self.shuriken_list)
 
-        # Loop through each colliding sprite, remove it, and add to the score.
-        for coin in hit_list:
-            coin.kill()
-            self.score += 1
+        if (len(hit_list) > 1):
+            self.game_state = False
+        else:
+            self.score += 0.1
+
+        if self.player.center_x < 50 or self.player.center_x > SCREEN_WIDTH - 50:
+            self.player.change_x = 0
 
 def main():
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
