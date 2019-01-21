@@ -8,7 +8,7 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 
 SHURIKEN_SCALE = 0.5
-SHURIKEN_COUNT = 30
+SHURIKEN_COUNT = 20
 
 MOVEMENT_SPEED = 5
 
@@ -136,7 +136,7 @@ class MyGame(arcade.Window):
         for mountain_range in self.back:
             mountain_range.draw()
 
-        if self.game_state:
+        if self.game_state == True:
             # Draw all the sprites.
             self.all_sprites_list.draw()
             self.shuriken_list.draw()
@@ -145,8 +145,11 @@ class MyGame(arcade.Window):
             output = "Score: {}".format(int(self.score))
             arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
         else:
+            output = "Score: {}".format(int(self.score))
+            arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
+
             output = "Game over"
-            arcade.draw_text(output, 535, 350, arcade.color.WHITE, 30)
+            arcade.draw_text(output, 515, 350, arcade.color.WHITE, 30)
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:
@@ -170,10 +173,11 @@ class MyGame(arcade.Window):
             arcade.check_for_collision_with_list(self.player,
                                                  self.shuriken_list)
 
-        if (len(hit_list) > 1):
+        if (len(hit_list) > 0):
             self.game_state = False
         else:
-            self.score += 0.1
+            if self.game_state == True:
+                self.score += 0.1
 
         if self.player.center_x < 50 or self.player.center_x > SCREEN_WIDTH - 50:
             self.player.change_x = 0
